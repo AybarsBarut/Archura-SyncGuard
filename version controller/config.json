@@ -1,0 +1,17 @@
+{
+  "repositoryOwner": "AybarsBarut",
+  "repositoryName": "Archura-SyncGuard",
+  "branch": "main",
+  "versionFilePath": "version controller/version.md",
+  "downloadMode": "zip",
+  "excludeFiles": [
+    "version controller/config.json",
+    ".env",
+    "user-data.json",
+    "settings.local.json"
+  ],
+  "backupBeforeUpdate": true,
+  "backupFolder": "version controller/backups",
+  "autoRestartAfterUpdate": false,
+  "startCommand": "start.bat"
+}

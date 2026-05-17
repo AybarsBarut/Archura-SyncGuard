@@ -1,0 +1,14 @@
+# Local secrets and user-specific files
+.env
+user-data.json
+settings.local.json
+
+# Version Controller backups
+version controller/backups/
+
+# Common build outputs
+bin/
+obj/
+dist/
+build/
+*.log
