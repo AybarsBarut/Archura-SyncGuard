@@ -1,6 +1,10 @@
-# Project Independent Version Controller
+# Archura SyncGuard - Project Independent Version Controller
 
 Bu proje, herhangi bir Windows uygulamasinin baslangicinda calistirilabilecek PowerShell tabanli, Git gerektirmeyen bir GitHub senkronizasyon sistemidir. Local `version controller/version.md` dosyasindaki SemVer degeri ile GitHub reposundaki ayni dosya karsilastirilir. Remote versiyon daha yeniyse repo zip olarak indirilir, local proje backup alinarak GitHub ile senkronize edilir.
+
+## SEO Keywords
+
+`#powershell` `#windows` `#github` `#version-control` `#auto-update` `#github-updater` `#windows-automation` `#semver` `#backup` `#sync-tool` `#deployment` `#developer-tools`
 
 ## Ornek Proje Yapisi
 
