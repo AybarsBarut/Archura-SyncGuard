@@ -1,12 +1,14 @@
 # Archura SyncGuard - Project Independent Version Controller
 
-Bu proje, herhangi bir Windows uygulamasinin baslangicinda calistirilabilecek PowerShell tabanli, Git gerektirmeyen bir GitHub senkronizasyon sistemidir. Local `version controller/version.md` dosyasindaki SemVer degeri ile GitHub reposundaki ayni dosya karsilastirilir. Remote versiyon daha yeniyse repo zip olarak indirilir, local proje backup alinarak GitHub ile senkronize edilir.
+Archura SyncGuard is a reusable PowerShell-based version controller for Windows projects. It checks the version stored in a GitHub repository, compares it with the local project version, and synchronizes the local project folder when the remote version is newer.
+
+The system does not require Git to be installed on the target machine. It uses GitHub raw file URLs for version checks and GitHub codeload zip downloads for updates.
 
 ## SEO Keywords
 
 `#powershell` `#windows` `#github` `#version-control` `#auto-update` `#github-updater` `#windows-automation` `#semver` `#backup` `#sync-tool` `#deployment` `#developer-tools`
 
-## Ornek Proje Yapisi
+## Example Project Structure
 
 ```text
 ProjectRoot/
@@ -22,33 +24,36 @@ ProjectRoot/
   app.exe
 ```
 
-## Kurulum
+## Installation
 
-1. `version controller` klasorunu projenizin root dizinine koyun.
-2. `version controller/config.json` dosyasindaki `repositoryOwner`, `repositoryName` ve `branch` alanlarini duzenleyin.
-3. GitHub reposunda da ayni pathte `version controller/version.md` dosyasinin bulundugundan emin olun.
-4. Uygulamayi dogrudan `app.exe` yerine `start.bat` ile baslatin.
+1. Place the `version controller` folder in the root directory of your project.
+2. Edit `version controller/config.json`.
+3. Set `repositoryOwner`, `repositoryName`, and `branch` to match your GitHub repository.
+4. Make sure the GitHub repository also contains `version controller/version.md`.
+5. Launch your application through `start.bat` instead of starting `app.exe` directly.
 
-## GitHub Repo Ayarlari
+## GitHub Repository Settings
 
-Repo public ise ek ayara gerek yoktur. Script su iki URL mantigini kullanir:
+If the repository is public, no additional authentication is required.
+
+The script uses these URL patterns:
 
 ```text
 https://raw.githubusercontent.com/{owner}/{repo}/{branch}/version%20controller/version.md
 https://codeload.github.com/{owner}/{repo}/zip/refs/heads/{branch}
 ```
 
-Private repo destegi bu sade surumde token kullanmadigi icin yoktur. Private repo gerekiyorsa `Invoke-WebRequest` cagrisina GitHub token header'i eklenmelidir.
+Private repositories are not supported in this minimal version because the script does not include token-based authentication. To support private repositories, add a GitHub token header to the `Invoke-WebRequest` calls.
 
-## version.md Nasil Guncellenir
+## How To Update version.md
 
-Local ve remote versiyon dosyasi tek satir SemVer icermelidir:
+Both local and remote version files must contain a single SemVer value:
 
 ```text
 1.0.0
 ```
 
-Yeni release yayinlamak icin GitHub reposundaki `version controller/version.md` degerini artirin:
+To publish a new release, increase the value in the GitHub repository:
 
 ```text
 1.0.1
@@ -56,17 +61,17 @@ Yeni release yayinlamak icin GitHub reposundaki `version controller/version.md` 
 2.0.0
 ```
 
-Script remote versiyonun local versiyondan buyuk oldugunu gorunce update baslatir.
+When the script detects that the remote version is newer than the local version, it starts the update process.
 
-## SemVer Aciklamasi
+## SemVer Rules
 
-Format:
+The supported version format is:
 
 ```text
 MAJOR.MINOR.PATCH
 ```
 
-Karsilastirma string olarak degil sayisal olarak yapilir:
+Versions are compared numerically, not as strings:
 
 ```text
 1.0.10 > 1.0.2
@@ -74,14 +79,14 @@ Karsilastirma string olarak degil sayisal olarak yapilir:
 1.1.0 > 1.0.9
 ```
 
-Pre-release veya build metadata bu temel surumde desteklenmez. Gecerli ornekler `1.0.0`, `1.0.1`, `2.1.1` bicimindedir.
+Pre-release labels and build metadata are not supported in this basic implementation. Valid examples are `1.0.0`, `1.0.1`, and `2.1.1`.
 
-## config.json Aciklamasi
+## config.json Reference
 
 ```json
 {
-  "repositoryOwner": "KULLANICI_ADI",
-  "repositoryName": "REPO_ADI",
+  "repositoryOwner": "USER_NAME",
+  "repositoryName": "REPOSITORY_NAME",
   "branch": "main",
   "versionFilePath": "version controller/version.md",
   "downloadMode": "zip",
@@ -98,22 +103,22 @@ Pre-release veya build metadata bu temel surumde desteklenmez. Gecerli ornekler 
 }
 ```
 
-Alanlar:
+Fields:
 
-- `repositoryOwner`: GitHub kullanici veya organizasyon adi.
-- `repositoryName`: GitHub repo adi.
-- `branch`: Kontrol edilecek branch. Genelde `main`.
-- `versionFilePath`: Remote ve local versiyon dosyasi yolu.
-- `downloadMode`: Bu surumde `zip` olmalidir.
-- `excludeFiles`: Update sirasinda overwrite edilmeyecek veya silinmeyecek local dosyalar.
-- `backupBeforeUpdate`: Update oncesi backup alinip alinmayacagi.
-- `backupFolder`: Backup klasorlerinin tutulacagi relative path.
-- `autoRestartAfterUpdate`: Update bitince `startCommand` calissin mi.
-- `startCommand`: Otomatik yeniden baslatmada calistirilacak komut.
+- `repositoryOwner`: GitHub user or organization name.
+- `repositoryName`: GitHub repository name.
+- `branch`: Branch to check. Usually `main`.
+- `versionFilePath`: Path to the version file in both the local project and the remote repository.
+- `downloadMode`: Must be `zip` in this version.
+- `excludeFiles`: Local files that must not be overwritten or deleted during updates.
+- `backupBeforeUpdate`: Enables or disables backup creation before updates.
+- `backupFolder`: Relative path where backup folders are stored.
+- `autoRestartAfterUpdate`: Runs `startCommand` after a successful update when enabled.
+- `startCommand`: Command used for optional automatic restart.
 
-## start.bat ile Kullanim
+## Using start.bat
 
-`start.bat` once version checker'i calistirir, sonra ana uygulamayi baslatir:
+`start.bat` runs the version checker first, then starts the main application:
 
 ```bat
 @echo off
@@ -121,28 +126,30 @@ powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1
 start "" "app.exe"
 ```
 
-Bu repodaki `start.bat` daha guvenli bir ornek olarak proje root'a `pushd` yapar ve `app.exe` yoksa uyari verir.
+The included `start.bat` is slightly safer: it changes into the project root with `pushd` and shows a clear warning when `app.exe` is missing.
 
-## start.ps1 ile Kullanim
+## Using start.ps1
 
-PowerShell alternatifi:
+PowerShell alternative:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File ".\start.ps1"
 ```
 
-`start.ps1`, proje root dizinini otomatik algilar, update check calistirir ve ardindan `app.exe` dosyasini baslatir.
+`start.ps1` detects the project root, runs the update check, and then starts `app.exe`.
 
-## .exe Baslamadan Once Update Check
+## Update Check Before Starting app.exe
 
-Uygulamayi kullaniciya `app.exe` yerine `start.bat` ile actirin. Akis:
+Users should launch the project through `start.bat` instead of opening `app.exe` directly.
 
-1. `start.bat` calisir.
-2. `version-checker.ps1` local ve remote versiyonu okur.
-3. Remote daha yeniyse zip indirilir ve proje senkronize edilir.
-4. Hata olsa bile `start.bat` uygulamayi baslatmaya devam eder.
+Flow:
 
-## Komut Ornekleri
+1. `start.bat` starts.
+2. `version-checker.ps1` reads the local and remote versions.
+3. If the remote version is newer, the repository zip is downloaded and the project is synchronized.
+4. If an error occurs, the error is logged and the application can still continue starting.
+
+## Command Examples
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1"
@@ -154,18 +161,18 @@ powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1
 powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1" --help
 ```
 
-## Parametreler
+## Parameters
 
-- `--check-only`: Sadece remote versiyonu kontrol eder. Zip indirmez, dosya degistirmez.
-- `--force`: Versiyon ayni olsa bile zip indirir ve dosyalari yeniden senkronize eder.
-- `--silent`: Konsol ciktisini azaltir.
-- `--restore-latest-backup`: En son backup klasorunu geri yukler.
-- `--no-backup`: Config backup acik olsa bile bu calistirmada backup almaz.
-- `--help`: Yardim bilgisini gosterir.
+- `--check-only`: Checks whether an update is available. It does not download or modify files.
+- `--force`: Downloads and synchronizes files even when the local and remote versions are equal.
+- `--silent`: Reduces console output.
+- `--restore-latest-backup`: Restores the most recent backup.
+- `--no-backup`: Skips backup creation for the current run, even if backups are enabled in config.
+- `--help`: Shows usage information.
 
-## excludeFiles Mantigi
+## excludeFiles Behavior
 
-`excludeFiles` icindeki relative pathler update sirasinda korunur:
+Relative paths listed in `excludeFiles` are protected during updates:
 
 ```json
 [
@@ -176,61 +183,67 @@ powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1
 ]
 ```
 
-Bu dosyalar remote zip icinde olsa bile local kopyalarinin ustune yazilmaz. Remote zip icinde yoksa da localden silinmez. Script ayrica `.git`, `version controller/backups` ve `version controller/update-log.md` yollarini dahili olarak korur.
+These files are not overwritten even if they exist in the remote zip. They are also not deleted if they do not exist in the remote repository.
 
-## Backup Sistemi
+The script also protects `.git`, `version controller/backups`, and `version controller/update-log.md` internally.
 
-`backupBeforeUpdate` true ise update oncesi tarih-saatli backup alinir:
+## Backup System
+
+When `backupBeforeUpdate` is set to `true`, a timestamped backup is created before updating:
 
 ```text
 version controller/backups/backup-2026-05-17-14-30-00
 ```
 
-Update yarida kalirsa script interaktif calismada backup'tan geri donmeyi sorar. Manuel geri yukleme:
+If an update fails halfway through, the script can ask whether the latest backup should be restored in interactive mode.
+
+Manual restore command:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File "version controller\version-checker.ps1" --restore-latest-backup
 ```
 
-## Log Sistemi
+## Logging
 
-Her calisma `version controller/update-log.md` dosyasina yazilir:
+Every run is written to `version controller/update-log.md`.
 
-- Tarih/saat
+The log includes:
+
+- Date and time
 - Local version
 - Remote version
-- Update yapildi mi
-- Degisen dosyalar
-- Hata detayi
+- Whether an update was performed
+- Changed files
+- Error details, if any
 
-## Hata Cozumu
+## Troubleshooting
 
-`config.json bulunamadi`: Script ornek config olusturur. GitHub bilgilerini doldurun.
+`config.json not found`: The script creates a sample config file. Fill in the GitHub repository details.
 
-`repositoryOwner ve repositoryName alanlarini guncelleyin`: Placeholder degerleri gercek repo bilgileriyle degistirin.
+`repositoryOwner and repositoryName must be updated`: Replace placeholder values with real GitHub repository information.
 
-`Local version.md bulunamadi`: `version controller/version.md` dosyasini olusturun ve `1.0.0` gibi gecerli SemVer yazin.
+`Local version.md not found`: Create `version controller/version.md` and write a valid SemVer value such as `1.0.0`.
 
-`GitHub remote version okunamadi`: Internet baglantisini, repo adini, branch adini ve dosya yolunu kontrol edin.
+`Could not read GitHub remote version`: Check your internet connection, repository name, branch name, and version file path.
 
-`Zip indirme basarisiz`: GitHub erisimi, branch adi veya repo public/private durumunu kontrol edin.
+`Zip download failed`: Check GitHub availability, the branch name, and whether the repository is public or private.
 
-`Gecersiz SemVer`: `1.0`, `v1.0.0`, `1.0.0-beta` bu temel surumde gecersizdir. `1.0.0` kullanin.
+`Invalid SemVer`: Values such as `1.0`, `v1.0.0`, or `1.0.0-beta` are not valid for this basic version. Use `1.0.0`.
 
-Execution policy hatasi: `start.bat` zaten `-ExecutionPolicy Bypass` kullanir. Manuel calistirirken de ayni komutu kullanin.
+Execution policy error: `start.bat` already uses `-ExecutionPolicy Bypass`. Use the same option when running the script manually.
 
-## Siklikla Yapilan Hatalar
+## Common Mistakes
 
-- GitHub'daki `version.md` dosyasini root'a koymak, ama configte `version controller/version.md` beklemek.
-- Branch adini `main` yerine `master` kullanan repoda configi guncellememek.
-- `version.md` icine `v1.0.0` yazmak.
-- `.env` gibi local dosyalari `excludeFiles` icine eklememek.
-- `autoRestartAfterUpdate` true iken ayrica `start.bat` icinden uygulamayi ikinci kez baslatmak.
+- Placing `version.md` at the repository root while the config expects `version controller/version.md`.
+- Using a `master` branch while the config is still set to `main`.
+- Writing `v1.0.0` instead of `1.0.0`.
+- Forgetting to add `.env` or other local-only files to `excludeFiles`.
+- Enabling `autoRestartAfterUpdate` while also starting the app again from `start.bat`.
 
-## Davranis Ozeti
+## Behavior Summary
 
-- Remote version localden buyukse update yapilir.
-- Versiyonlar esitse indirme yapilmaz.
-- Remote version localden dusukse uyari verilir, islem yapilmaz.
-- `--force` verilirse versiyon ayni olsa bile senkronizasyon yapilir.
-- Hata durumlari loglanir ve uygulamanin baslamasi engellenmez.
+- If the remote version is newer than the local version, an update is performed.
+- If both versions are equal, no download is performed.
+- If the remote version is older than the local version, the script shows a warning and does nothing.
+- If `--force` is used, synchronization runs even when versions are equal.
+- Errors are logged and do not prevent the application startup flow from continuing.
